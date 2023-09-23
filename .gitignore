@@ -60,7 +60,7 @@ coverage.xml
 *.pot
 
 # Django stuff:
-*/migrations/*
+migrations/
 .log
 db.sqlite3
 
