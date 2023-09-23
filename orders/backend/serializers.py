@@ -1,8 +1,20 @@
+from django.db.models import F, Sum
 from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from backend.models import Address, User
+from backend.models import (
+    Address,
+    Category,
+    Delivery,
+    Order,
+    OrderItem,
+    Product,
+    ProductInfo,
+    ProductParameter,
+    Shop,
+    User,
+)
 
 
 class StatusTrueSerializer(serializers.Serializer):
@@ -88,3 +100,215 @@ class UserWithPasswordSerializer(serializers.ModelSerializer):
             "position",
             "phone",
         ]
+
+
+@extend_schema_serializer(
+    exclude_fields=["shop"],
+)
+class DeliverySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Delivery
+        fields = ["shop", "min_sum", "cost"]
+        extra_kwargs = {
+            "shop": {"write_only": True},
+        }
+
+
+class ShopSerializer(serializers.ModelSerializer):
+    delivery = DeliverySerializer(read_only=True, many=True)
+
+    class Meta:
+        model = Shop
+        fields = [
+            "id",
+            "name",
+            "state",
+            "delivery",
+            "file",
+            "url",
+            "update_dt",
+            "is_uptodate",
+        ]
+        read_only_fields = ["id"]
+        extra_kwargs = {
+            "file": {"write_only": True},
+            "url": {"write_only": True},
+            "update_dt": {"write_only": True},
+            "is_uptodate": {"write_only": True},
+        }
+
+
+class ProductSerializer(serializers.ModelSerializer):
+    category = serializers.StringRelatedField()
+
+    class Meta:
+        model = Product
+        fields = [
+            "name",
+            "category",
+        ]
+
+
+class ProductParameterSerializer(serializers.ModelSerializer):
+    parameter = serializers.StringRelatedField()
+
+    class Meta:
+        model = ProductParameter
+        fields = [
+            "parameter",
+            "value",
+        ]
+
+
+class ProductInfoSerializer(serializers.ModelSerializer):
+    product = ProductSerializer(read_only=True)
+    product_parameters = ProductParameterSerializer(read_only=True, many=True)
+    shop = ShopSerializer(read_only=True)
+
+    class Meta:
+        model = ProductInfo
+        fields = [
+            "id",
+            "external_id",
+            "model",
+            "product",
+            "shop",
+            "quantity",
+            "price",
+            "price_rrc",
+            "product_parameters",
+        ]
+        read_only_fields = ["id"]
+
+
+@extend_schema_serializer(exclude_fields=["order"])
+class OrderItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderItem
+        fields = [
+            "id",
+            "quantity",
+            "product_info",
+            "order",
+        ]
+        read_only_fields = ["id"]
+        extra_kwargs = {"order": {"write_only": True}}
+
+
+class OrderProductInfoSerializer(ProductInfoSerializer):
+    class Meta:
+        model = ProductInfo
+        fields = [
+            "id",
+            "external_id",
+            "model",
+            "product",
+            "product_parameters",
+            "price",
+            "price_rrc",
+        ]
+        read_only_fields = ["id"]
+
+
+class ShopOrderItemSerializer(OrderItemSerializer):
+    product_info = OrderProductInfoSerializer(read_only=True)
+
+
+class ShopOrderSerializer(serializers.ModelSerializer):
+    def __init__(self, *args, **kwargs):
+        # Don't pass the 'order_id' arg up to the superclass
+        order_id = kwargs.pop("order_id", None)
+
+        # Instantiate the superclass normally
+        super().__init__(*args, **kwargs)
+
+        self.order_id = order_id
+
+    shop_sum = serializers.IntegerField()
+
+    class Meta:
+        model = Shop
+        fields = [
+            "id",
+            "name",
+            "shop_sum",
+        ]
+        read_only_fields = ["id"]
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        if self.order_id is not None:
+            ordered_items = OrderItem.objects.filter(
+                product_info__shop=instance.id, order=self.order_id
+            )
+            ret["ordered_items"] = [
+                ShopOrderItemSerializer(item).data for item in ordered_items
+            ]
+
+        return ret
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    total_sum = serializers.IntegerField()
+    address = AddressSerializer(read_only=True)
+
+    class Meta:
+        model = Order
+        fields = ["id", "state", "dt", "total_sum", "address"]
+        read_only_fields = ["id"]
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        delivery_costs = []
+        invalid_deliveries = []
+        shops = (
+            Shop.objects.filter(product_infos__ordered_items__order=instance.id)
+            .annotate(
+                shop_sum=Sum(
+                    F("product_infos__ordered_items__quantity")
+                    * F("product_infos__price")
+                )
+            )
+            .distinct()
+        )
+        ret["shops"] = []
+        for shop in shops:
+            shop_data = ShopOrderSerializer(shop, order_id=instance.id).data
+            shop_deliveries = Delivery.objects.filter(shop=shop)
+            if shop_deliveries:
+                shop_delivery = (
+                    shop_deliveries.filter(min_sum__lte=shop_data["shop_sum"])
+                    .order_by("-min_sum")
+                    .first()
+                )
+                if shop_delivery is None:
+                    shop_data["delivery"] = (
+                        f"{shop_data['name']}: " f"сумма заказа меньше минимальной."
+                    )
+                    invalid_deliveries.append(shop_data["delivery"])
+                else:
+                    shop_data["delivery"] = shop_delivery.cost
+                    delivery_costs.append(shop_data["delivery"])
+            else:
+                shop_data["delivery"] = (
+                    f"{shop_data['name']}: " f"стоимость доставки недоступна."
+                )
+                invalid_deliveries.append(shop_data["delivery"])
+            ret["shops"].append(shop_data)
+
+        if invalid_deliveries:
+            ret["total_delivery"] = invalid_deliveries
+        else:
+            ret["total_delivery"] = sum(delivery_costs)
+
+        return ret
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = [
+            "id",
+            "name",
+        ]
+        read_only_fields = ["id"]

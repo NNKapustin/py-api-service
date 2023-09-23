@@ -1,8 +1,7 @@
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.http import JsonResponse
-from drf_spectacular.utils import (extend_schema, extend_schema_view,
-                                   inline_serializer)
+from drf_spectacular.utils import extend_schema, extend_schema_view, inline_serializer
 from rest_framework import fields, status, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
@@ -10,9 +9,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from backend.models import Address, ConfirmEmailToken, User
-from backend.serializers import (AddressSerializer, StatusFalseSerializer,
-                                 StatusTrueSerializer, UserSerializer,
-                                 UserWithPasswordSerializer)
+from backend.serializers import (
+    AddressSerializer,
+    StatusFalseSerializer,
+    StatusTrueSerializer,
+    UserSerializer,
+    UserWithPasswordSerializer,
+)
 from backend.tasks import send_email_task
 
 
@@ -35,7 +38,6 @@ class UserViewSet(viewsets.GenericViewSet):
         User register
         """
 
-        # проверяем обязательные аргументы
         required_fields = {
             "first_name",
             "last_name",
@@ -55,7 +57,6 @@ class UserViewSet(viewsets.GenericViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # проверяем пароль на сложность
         try:
             validate_password(request.data["password"])
         except Exception as password_error:
@@ -64,14 +65,12 @@ class UserViewSet(viewsets.GenericViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         else:
-            # проверяем данные для уникальности имени пользователя
             user_serializer = self.get_serializer(data=request.data)
             if user_serializer.is_valid():
-                # сохраняем пользователя
                 user = user_serializer.save()
                 user.set_password(request.data["password"])
                 user.save()
-                # отправляем письмо с подтверждением почты
+
                 token, _ = ConfirmEmailToken.objects.get_or_create(user_id=user.id)
                 title = f"Password Reset Token for {token.user.email}"
                 message = token.key
@@ -97,7 +96,6 @@ class UserViewSet(viewsets.GenericViewSet):
         Email confirmation
         """
 
-        # проверяем обязательные аргументы
         if not {"email", "token"}.issubset(request.data):
             return JsonResponse(
                 {"Status": False, "Errors": "Не указаны все необходимые аргументы"},
@@ -181,7 +179,6 @@ class UserViewSet(viewsets.GenericViewSet):
         else:
             if "password" in request.data:
                 errors = {}
-                # проверяем пароль на сложность
                 try:
                     validate_password(request.data["password"])
                 except Exception as password_error:
@@ -192,7 +189,6 @@ class UserViewSet(viewsets.GenericViewSet):
                 else:
                     request.user.set_password(request.data["password"])
 
-            # проверяем остальные данные
             user_serializer = self.get_serializer(
                 request.user, data=request.data, partial=True
             )
