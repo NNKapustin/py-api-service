@@ -13,9 +13,11 @@ from .views import (
     ProductInfoView,
     ShopView,
     UserViewSet,
+    PartnerViewSet,
 )
 
 router = DefaultRouter()
+router.register(r"partner", PartnerViewSet, basename="partner")
 router.register(r"user", UserViewSet)
 router.register(r"user/addresses", AddressViewSet, basename="user-address")
 

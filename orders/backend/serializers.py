@@ -312,3 +312,48 @@ class CategorySerializer(serializers.ModelSerializer):
             "name",
         ]
         read_only_fields = ["id"]
+
+
+@extend_schema_serializer(exclude_fields=['is_active'])
+class PartnerSerializer(serializers.ModelSerializer):
+    is_active = serializers.BooleanField(default=False)
+    type = serializers.CharField(default='shop', write_only=True)
+    address = AddressSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'last_name', 'first_name', 'patronymic',
+                  'company', 'position', 'phone', 'address',
+                  'type', 'is_active']
+        read_only_fields = ['id']
+
+
+class PartnerOrderSerializer(serializers.ModelSerializer):
+    def __init__(self, *args, **kwargs):
+        # Don't pass the 'partner_id' arg up to the superclass
+        partner_id = kwargs.pop('partner_id', None)
+
+        # Instantiate the superclass normally
+        super().__init__(*args, **kwargs)
+
+        self.partner_id = partner_id
+
+    total_sum = serializers.IntegerField()
+    address = AddressSerializer(read_only=True)
+
+    class Meta:
+        model = Order
+        fields = ['id', 'state', 'dt', 'total_sum', 'address']
+        read_only_fields = ['id']
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        if self.partner_id is not None:
+            ordered_items = OrderItem.objects.filter(
+                product_info__shop__user_id=self.partner_id, order=instance.id
+            ).distinct()
+            ret['ordered_items'] = [
+                ShopOrderItemSerializer(item).data for item in ordered_items
+            ]
+
+        return ret
