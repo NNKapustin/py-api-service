@@ -22,7 +22,6 @@ class ProductParameterInline(admin.TabularInline):
 @admin.register(ProductInfo)
 class ProductInfoAdmin(admin.ModelAdmin):
     model = ProductInfo
-    # extra = 0
     fields = (('id', 'external_id'), 'model', 'product', 'shop', 'quantity',
               ('price', 'price_rrc'))
     readonly_fields = ('id', 'model', 'external_id', 'product', 'shop',
@@ -91,7 +90,6 @@ class DeliveryInline(admin.TabularInline):
 def make_uptodate(modeladmin, request, queryset):
     """
     Action which updates prices for the selected shops.
-
     This action first displays a confirmation page.
     """
     context = {
@@ -117,7 +115,6 @@ def make_uptodate(modeladmin, request, queryset):
 
 @admin.register(Shop)
 class ShopAdmin(admin.ModelAdmin):
-    # TODO show right link to file or just filename
     fields = ('state', ('name', 'id',), ('user',), ('url', 'file'),
               'update_dt', 'is_uptodate')
     readonly_fields = ('id', 'url', 'file')
