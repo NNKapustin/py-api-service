@@ -19,12 +19,12 @@ from backend.permissions import IsShop
 from backend.serializers import (PartnerSerializer, ShopSerializer,
                            PartnerOrderSerializer, DeliverySerializer,
                            UserWithPasswordSerializer, StatusTrueSerializer, StatusFalseSerializer)
-from ..tasks import send_email_task
+from backend.tasks import send_email_task
 
 
 class PartnerViewSet(viewsets.GenericViewSet):
     """
-    Viewset для работы с поставщиками
+    Viewset for partners
     """
     queryset = User.objects.filter(type='shop')
     serializer_class = PartnerSerializer
@@ -37,13 +37,11 @@ class PartnerViewSet(viewsets.GenericViewSet):
     @action(methods=['post'], detail=False, permission_classes=[])
     def register(self, request):
         """
-        Регистрация поставщика.
-        Отправка почты администратору о регистрации нового поставщика.
-        После регистрации администратору необходимо активировать поставщика
-        для начала работы.
+        Partner registry. 
+        Send email to admin about registration, admin have to acivate new partner
         """
 
-        # проверяем обязательные аргументы
+        # check args
         if not {'email', 'password', 'company'}.issubset(request.data):
             return JsonResponse(
                 {'Status': False,
@@ -51,7 +49,7 @@ class PartnerViewSet(viewsets.GenericViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # проверяем пароль на сложность
+        # check password
         try:
             validate_password(request.data['password'])
         except Exception as password_error:
@@ -61,15 +59,15 @@ class PartnerViewSet(viewsets.GenericViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         else:
-            # проверяем данные для уникальности имени пользователя
+            # check data
             partner_serializer = self.get_serializer(data=request.data)
             if partner_serializer.is_valid():
-                # сохраняем пользователя
+                # save partner
                 user = partner_serializer.save()
                 user.set_password(request.data['password'])
                 user.save()
 
-                # отправляем письмо с подтверждением почты
+                # email verification 
                 token, _ = ConfirmEmailToken.objects.get_or_create(
                     user_id=user.id
                 )
@@ -78,7 +76,7 @@ class PartnerViewSet(viewsets.GenericViewSet):
                 addressee_list = [token.user.email]
                 send_email_task.delay(title, message, addressee_list)
 
-                # отправляем письмо администратору
+                # email to admin
                 title = f"Новый поставщик: {user}"
                 message = (f"Зарегистрировался новый поставщик: {user}. "
                            f"Для начала работы необходимо его активировать.")
@@ -103,7 +101,7 @@ class PartnerViewSet(viewsets.GenericViewSet):
             parser_classes=[parsers.MultiPartParser])
     def price_info(self, request):
         """
-        Загрузка файла или ссылки для обновления прайс-листа
+        Load file or url of pricelist to update
         """
 
         data = {'file': None, 'url': None,
@@ -132,7 +130,7 @@ class PartnerViewSet(viewsets.GenericViewSet):
         if shop_serializer.is_valid():
             shop_serializer.save()
 
-            # отправляем письмо администратору о новом прайс-листе
+            # send email to admin about new pricelist
             title = f"{shop_serializer.data['name']}: обновление прайса"
             message = (f"Пользователь {request.user} сообщил о новом "
                        f"прайс-листе магазина {shop_serializer.data['name']}")
@@ -156,7 +154,7 @@ class PartnerViewSet(viewsets.GenericViewSet):
     @action(methods=['get', 'post'], detail=False)
     def state(self, request):
         """
-        Получение и изменение текущего статуса поставщика
+        GET or POST partner status
         """
 
         if request.method == 'GET':
@@ -197,7 +195,7 @@ class PartnerViewSet(viewsets.GenericViewSet):
     @action(detail=False)
     def orders(self, request):
         """
-        Просмотр заказов поставщика
+        GET partner order
         """
 
         order = Order.objects.filter(
@@ -235,7 +233,7 @@ class PartnerViewSet(viewsets.GenericViewSet):
     @action(methods=['get', 'post'], detail=False)
     def delivery(self, request):
         """
-        Получение и изменение стоимости доставки
+        GET or POST delivery cost
         """
 
         if request.method == 'GET':
