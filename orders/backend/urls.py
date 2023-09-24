@@ -10,10 +10,10 @@ from .views import (
     BasketView,
     CategoryView,
     OrderView,
+    PartnerViewSet,
     ProductInfoView,
     ShopView,
     UserViewSet,
-    PartnerViewSet,
 )
 
 router = DefaultRouter()
