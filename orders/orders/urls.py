@@ -25,15 +25,12 @@ from drf_spectacular.views import (
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/v1/", include("backend.urls")),
-    # download API schema
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
-    # swagger
     path(
         "api/schema/swagger/",
         SpectacularSwaggerView.as_view(url_name="schema"),
         name="swagger",
     ),
-    # redoc
     path(
         "api/schema/redoc/",
         SpectacularRedocView.as_view(url_name="schema"),

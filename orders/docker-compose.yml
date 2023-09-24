@@ -1,4 +1,4 @@
-version: '3.1'
+version: '3.7'
 
 volumes:
   pg_data:
@@ -41,7 +41,7 @@ services:
         python manage.py makemigrations backend --noinput
         python manage.py migrate
         python manage.py runserver 0.0.0.0:8000
-  
+
   worker:
     build:
       context: .
