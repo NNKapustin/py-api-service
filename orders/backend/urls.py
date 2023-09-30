@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from django_rest_passwordreset.views import (
     reset_password_confirm,
     reset_password_request_token,

@@ -26,6 +26,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("baton/", include('baton.urls')),
     path("api/v1/", include("backend.urls")),
+    path('silk/', include('silk.urls', namespace='silk')),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(
         "api/schema/swagger/",
