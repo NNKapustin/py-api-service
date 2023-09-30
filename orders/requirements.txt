@@ -10,3 +10,4 @@ psycopg2-binary==2.9.7
 requests==2.31.0
 PyYAML==6.0.1
 redis==5.0.0
+django-baton==2.8.0

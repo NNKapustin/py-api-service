@@ -41,6 +41,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'baton',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -51,7 +52,8 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'django_rest_passwordreset',
     'backend',
-    'drf_spectacular'
+    'drf_spectacular',
+    'baton.autodiscover',
 ]
 
 MIDDLEWARE = [
@@ -179,5 +181,31 @@ SPECTACULAR_SETTINGS = {
     'SWAGGER_UI_SETTINGS': {
         'persistAuthorization': True,
         'defaultModelsExpandDepth': -1,
+    },
+}
+
+BATON = {
+    'SITE_HEADER': 'Сервис заказов',
+    'SITE_TITLE': 'Service',
+    'INDEX_TITLE': 'Администрирование API',
+    'SUPPORT_HREF': 'https://github.com/NNKapustin',
+    'COPYRIGHT': 'copyright © 2023 <a href="https://github.com/NNKapustin">NNKapustin</a>', 
+    'POWERED_BY': '<a href="https://github.com/NNKapustin">NNKapustin</a>',
+    'CONFIRM_UNSAVED_CHANGES': True,
+    'SHOW_MULTIPART_UPLOADING': True,
+    'ENABLE_IMAGES_PREVIEW': True,
+    'CHANGELIST_FILTERS_IN_MODAL': True,
+    'CHANGELIST_FILTERS_ALWAYS_OPEN': False,
+    'CHANGELIST_FILTERS_FORM': True,
+    'MENU_ALWAYS_COLLAPSED': False,
+    'MENU_TITLE': 'Menu',
+    'MESSAGES_TOASTS': False,
+    'GRAVATAR_DEFAULT_IMG': 'retro',
+    'GRAVATAR_ENABLED': True,
+    'LOGIN_SPLASH': 'https://media.freshbooks.com/wp-content/uploads/2022/11/Source-Documents-in-Accounting.jpg',
+    'FORCE_THEME': None,
+    'SEARCH_FIELD': {
+        'label': 'Поиск...',
+        'url': '/search/',
     },
 }

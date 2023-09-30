@@ -33,7 +33,7 @@
 
 4. Для доступа к админстративной панели Django создаем суперпользователя
 
-    <code>>> docker-compose exec web python manage.py createsuperuser</code>
+    <code>>> docker-compose exec backend python manage.py createsuperuser</code>
 
 ## Адреса сервиса
 
