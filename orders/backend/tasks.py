@@ -1,15 +1,8 @@
+from backend.models import (Category, Parameter, Product, ProductInfo,
+                            ProductParameter, Shop)
 from celery import shared_task
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
-
-from backend.models import (
-    Category,
-    Parameter,
-    Product,
-    ProductInfo,
-    ProductParameter,
-    Shop,
-)
 
 
 @shared_task()

@@ -1,11 +1,10 @@
 import os
 
 import pytest
+from backend.models import User
 from django.conf import settings
 from rest_framework import status
 from rest_framework.test import APIClient
-
-from backend.models import User
 
 PATH_PREFIX = "http://127.0.0.1:8000/api/v1/"
 

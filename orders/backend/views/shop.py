@@ -1,3 +1,10 @@
+from backend.models import (Category, Delivery, Order, OrderItem, ProductInfo,
+                            Shop)
+from backend.serializers import (CategorySerializer, OrderItemSerializer,
+                                 OrderSerializer, ProductInfoSerializer,
+                                 ShopOrderSerializer, ShopSerializer,
+                                 StatusFalseSerializer, StatusTrueSerializer)
+from backend.tasks import send_email_task
 from django.conf import settings
 from django.db import IntegrityError
 from django.db.models import F, Q, Sum
@@ -9,18 +16,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from backend.models import Category, Delivery, Order, OrderItem, ProductInfo, Shop
-from backend.serializers import (
-    CategorySerializer,
-    OrderItemSerializer,
-    OrderSerializer,
-    ProductInfoSerializer,
-    ShopOrderSerializer,
-    ShopSerializer,
-    StatusFalseSerializer,
-    StatusTrueSerializer,
-)
-from backend.tasks import send_email_task
 from orders.schema import BASKET_RESPONSE, MY_ORDERS_RESPONSE
 
 
