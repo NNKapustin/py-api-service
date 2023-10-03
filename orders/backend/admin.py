@@ -1,8 +1,18 @@
 import requests as rqs
 import yaml
-from backend.models import (STATE_CHOICES, Address, Category,
-                            ConfirmEmailToken, Delivery, Order, OrderItem,
-                            ProductInfo, ProductParameter, Shop, User)
+from backend.models import (
+    STATE_CHOICES,
+    Address,
+    Category,
+    ConfirmEmailToken,
+    Delivery,
+    Order,
+    OrderItem,
+    ProductInfo,
+    ProductParameter,
+    Shop,
+    User,
+)
 from backend.tasks import do_import_task, send_email_task
 from django.contrib import admin
 from django.contrib.admin import helpers

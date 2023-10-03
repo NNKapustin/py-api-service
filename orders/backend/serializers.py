@@ -1,5 +1,15 @@
-from backend.models import (Address, Category, Delivery, Order, OrderItem,
-                            Product, ProductInfo, ProductParameter, Shop, User)
+from backend.models import (
+    Address,
+    Category,
+    Delivery,
+    Order,
+    OrderItem,
+    Product,
+    ProductInfo,
+    ProductParameter,
+    Shop,
+    User,
+)
 from django.db.models import F, Sum
 from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers

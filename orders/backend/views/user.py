@@ -1,18 +1,22 @@
 from backend.models import Address, ConfirmEmailToken, User
-from backend.serializers import (AddressSerializer, StatusFalseSerializer,
-                                 StatusTrueSerializer, UserSerializer,
-                                 UserWithPasswordSerializer)
+from backend.serializers import (
+    AddressSerializer,
+    StatusFalseSerializer,
+    StatusTrueSerializer,
+    UserSerializer,
+    UserWithPasswordSerializer,
+)
 from backend.tasks import send_email_task
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.http import JsonResponse
-from drf_spectacular.utils import (extend_schema, extend_schema_view,
-                                   inline_serializer)
+from drf_spectacular.utils import extend_schema, extend_schema_view, inline_serializer
 from rest_framework import fields, status, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from silk.profiling.profiler import silk_profile
 
 
 class UserViewSet(viewsets.GenericViewSet):
@@ -218,6 +222,7 @@ class AddressViewSet(viewsets.ModelViewSet):
     serializer_class = AddressSerializer
     permission_classes = [IsAuthenticated]
 
+    @silk_profile(name="Get Addresses")
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
             return Address.objects.none()

@@ -1,9 +1,14 @@
-from backend.models import (Category, Delivery, Order, OrderItem, ProductInfo,
-                            Shop)
-from backend.serializers import (CategorySerializer, OrderItemSerializer,
-                                 OrderSerializer, ProductInfoSerializer,
-                                 ShopOrderSerializer, ShopSerializer,
-                                 StatusFalseSerializer, StatusTrueSerializer)
+from backend.models import Category, Delivery, Order, OrderItem, ProductInfo, Shop
+from backend.serializers import (
+    CategorySerializer,
+    OrderItemSerializer,
+    OrderSerializer,
+    ProductInfoSerializer,
+    ShopOrderSerializer,
+    ShopSerializer,
+    StatusFalseSerializer,
+    StatusTrueSerializer,
+)
 from backend.tasks import send_email_task
 from django.conf import settings
 from django.db import IntegrityError
@@ -15,6 +20,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from silk.profiling.profiler import silk_profile
 
 from orders.schema import BASKET_RESPONSE, MY_ORDERS_RESPONSE
 
@@ -45,6 +51,7 @@ class ProductInfoView(APIView):
     queryset = ProductInfo.objects.none()
     serializer_class = ProductInfoSerializer
 
+    @silk_profile(name="View Product Info")
     def get(self, request, *args, **kwargs):
         query = Q(shop__state=True)
         shop_id = request.query_params.get("shop_id")
