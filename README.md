@@ -35,7 +35,7 @@
 
     <code>>> docker-compose exec backend python manage.py createsuperuser</code>
 
-## Адреса сервиса
+## Адреса сервиса 
 
 - API сервис: [127.0.0.1:8000/api/v1/](http://127.0.0.1:8000/api/v1/)
 - Админ панель Django: [127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/)
